@@ -2,6 +2,7 @@ class Lexico:
 
     def __init__(self, entrada):
         self.listaCaracteres = list(entrada)
+        self.texto = ""
     
     def analisis(self):
         lexema = ""
@@ -20,9 +21,11 @@ class Lexico:
                     fila += 1
                     estado = 0
                     columna = 0
+                    self.texto += caracter
             
                 elif (caracter == ' ' or caracter == '\r' or caracter == '\t' or caracter == '\b' or caracter == '\f'):
                     estado = 0
+                    self.texto += caracter
 
                 #comentarios
                 elif caracter == '/':
@@ -70,6 +73,7 @@ class Lexico:
                     estado = 1
                 
                 elif caracter == '*':
+                    lexema += caracter
                     estado = 9
 
                 else:
@@ -80,6 +84,7 @@ class Lexico:
                         print("símbolo: " + lexema)
                         estado = 0
 
+                    self.texto += lexema
                     lexema = ""
                     indice -= 1
 
@@ -92,12 +97,14 @@ class Lexico:
 
                     else:
                         print("símbolo: " + caracter)
+                        self.texto += caracter
                         estado = 0
                         lexema = ""
                         #indice -= 1
                 
                 else:
                     print("símbolo: " + lexema)
+                    self.texto += lexema
                     estado = 0
                     lexema = ""
                     indice -= 1
@@ -110,6 +117,7 @@ class Lexico:
 
                 else:
                     print("id: " + lexema)
+                    self.texto += lexema
                     estado = 0
                     lexema = ""
                     indice -= 1
@@ -121,10 +129,12 @@ class Lexico:
                     estado = 4
 
                 elif caracter == '.':
+                    lexema += caracter
                     estado = 10
 
                 else:
                     print("numero: " + lexema)
+                    self.texto += lexema
                     estado = 0
                     lexema = ""
                     indice -= 1
@@ -141,6 +151,7 @@ class Lexico:
 
                 else:
                     print("símbolo: " + lexema)
+                    self.texto += lexema
                     estado = 0
                     lexema = ""
                     indice -= 1
@@ -152,6 +163,7 @@ class Lexico:
                 
                 #else:
                 print("cadena empieza")
+                self.texto += caracter
                 estado = 11
                 lexema = ""
                 #indice -= 1
@@ -163,6 +175,7 @@ class Lexico:
                 
                 #else:
                     print("caracter empieza")
+                    self.texto += caracter
                     estado = 12
                     lexema = ""
                     #indice -= 1
@@ -175,6 +188,7 @@ class Lexico:
 
                 else:
                     print("comentario lineal: " + lexema)
+                    self.texto += lexema
                     estado = 0
                     lexema = ""
                     indice -= 1
@@ -188,9 +202,11 @@ class Lexico:
                 elif caracter == '\n':
                     columna = 0
                     fila += 1
+                    self.texto += caracter
                 
                 else:
                     print("comentario multi " + lexema)
+                    self.texto += lexema
                     estado = 13
                     lexema = ""
                     indice -= 1
@@ -216,6 +232,7 @@ class Lexico:
                 
                 else:
                     print("contenido cadena " + lexema)
+                    self.texto += lexema
                     estado = 15
                     lexema = ""
                     indice -= 1
@@ -227,6 +244,7 @@ class Lexico:
                     estado = 12
                 else:
                     print("contenido caracter " + lexema)
+                    self.texto += lexema
                     estado = 16
                     lexema = ""
                     indice -= 1
@@ -234,14 +252,17 @@ class Lexico:
             #reconoce el final de un comentario multilínea
             elif estado == 13:
                 if (caracter == '*'):
+                    self.texto += caracter
                     estado = 13
 
                 elif caracter == '/':
                     estado = 17
+                    self.texto += caracter
 
                 elif caracter == '\n':
                     columna = 0
                     fila += 1
+                    self.texto += caracter
 
                 else:
                     estado = 9
@@ -253,6 +274,7 @@ class Lexico:
                     estado = 14
                 else:
                     print("decimal " + lexema)
+                    self.texto += lexema
                     estado = 0
                     lexema = ""
                     indice -= 1
@@ -260,18 +282,21 @@ class Lexico:
             #estado de aceptación
             elif estado == 15:
                 print("cadena termina")
+                self.texto += caracter
                 estado = 0
                 lexema = ""
 
             #estado de aceptación
             elif estado == 16:
                 print("termina caracter")
+                self.texto += caracter
                 estado = 0
                 lexema = ""
 
             #estado de aceptación
             elif estado == 17:
                 print("termina comentario multi")
+                self.texto += lexema
                 estado = 0
                 lexema = ""       
 
@@ -286,14 +311,14 @@ class Lexico:
             columna += 1
         #ENDWHILE
     #ENDANALISIS
-
-
-            
-
-        
+  
     #ENDINIT
 #ENDCLASS
 
-pruebaArchivo = open("ejemplo.js", "r")
+pruebaArchivo = open("dibujo.js", "r")
 lex = Lexico(str(pruebaArchivo.read()))
 lex.analisis()
+#escribir el archivo ya corregido
+archivoSalida = open("ArchivoSalidaJS.js", "w")
+archivoSalida.write(lex.texto)
+archivoSalida.close()
