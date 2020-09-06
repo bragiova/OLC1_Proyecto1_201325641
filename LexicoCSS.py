@@ -29,7 +29,8 @@ class LexicoCss:
                 elif caracter == '/':
                     estado = 1
 
-                elif caracter == '*':
+                #estado símbolos
+                elif (caracter == '=' or caracter == ';' or caracter == ',' or caracter == '(' or caracter == ')' or caracter == '{' or caracter == '}' or caracter == ':' or caracter == '%' or caracter == '.' or caracter == '*'):
                     estado = 2
 
                 #estado letras
@@ -43,9 +44,6 @@ class LexicoCss:
                 #reconocer números negativos
                 elif caracter == '-':
                     estado = 5
-
-                elif caracter == '.':
-                    estado = 2
                 
                 #estado cadenas y caracter
                 elif ((ord(caracter) == 34) or (ord(caracter) == 39)):
@@ -53,10 +51,6 @@ class LexicoCss:
 
                 elif caracter == '#':
                     estado = 7
-
-                #estado símbolos
-                elif (caracter == '=' or caracter == ';' or caracter == ',' or caracter == '(' or caracter == ')' or caracter == '{' or caracter == '}' or caracter == ':' or caracter == '%'):
-                    estado = 2
                 
                 #estado error
                 else:
@@ -71,24 +65,28 @@ class LexicoCss:
                 
                 elif caracter == '*':
                     lexema += caracter
-                    estado = 9
-
-                else:
-                    if lexema == "//":
-                        print("comentario lineal empieza")
-                        estado = 8
-                    else:
-                        print("símbolo: " + lexema)
-                        estado = 0
-
+                    print("comentario empieza: " + lexema)
+                    estado = 8
                     self.texto += lexema
                     lexema = ""
-                    indice -= 1
+
+                else:
+                    #if lexema == "//":
+                        #print("comentario lineal empieza")
+                        #estado = 8
+                    #else:
+                        #print("símbolo: " + lexema)
+                        #estado = 0
+
+                    #self.texto += lexema
+                    lexema = ""
+                    estado = -1
+                    #indice -= 1
 
             #reconocimiento de símbolos
             elif estado == 2:
-                if ((ord(caracter) >= 40 and ord(caracter) <= 44) or (ord(caracter) >= 58 and ord(caracter) <= 62) or caracter == '&' or caracter == '.' or caracter == '/' or caracter == '[' or caracter == ']' or caracter == '{' or caracter == '}' or caracter == '|'):
-                    if(caracter == '+' or caracter == '-' or caracter == '&' or caracter == '|' or caracter == '=' or caracter == '<' or caracter == '>'):
+                if (caracter == '=' or caracter == ';' or caracter == ',' or caracter == '(' or caracter == ')' or caracter == '{' or caracter == '}' or caracter == ':' or caracter == '%' or caracter == '.' or caracter == '*'):
+                    if caracter == ':':
                         lexema += caracter
                         estado = 2
 
@@ -108,7 +106,7 @@ class LexicoCss:
             
             #reconocimiento de id's
             elif estado == 3:
-                if ((ord(caracter) >= 65 and ord(caracter) <= 90) or (ord(caracter) >= 97 and ord(caracter) <= 122) or (ord(caracter) >= 48 and ord(caracter) <= 57) or caracter == '_'):
+                if ((ord(caracter) >= 65 and ord(caracter) <= 90) or (ord(caracter) >= 97 and ord(caracter) <= 122) or (ord(caracter) >= 48 and ord(caracter) <= 57) or caracter == '-'):
                     lexema += caracter
                     estado = 3
 
@@ -127,7 +125,7 @@ class LexicoCss:
 
                 elif caracter == '.':
                     lexema += caracter
-                    estado = 10
+                    estado = 9
 
                 else:
                     print("numero: " + lexema)
@@ -155,105 +153,103 @@ class LexicoCss:
 
             #reconocimiento de cadenas
             elif estado == 6:
-                #if (ord(caracter) == 34):
-                    #estado == 6
-                
-                #else:
-                print("cadena empieza")
+                print("cadena | caracter empieza")
                 self.texto += caracter
-                estado = 11
+                estado = 66
                 lexema = ""
-                #indice -= 1
-            
-            #reconocimiento de caracteres
-            elif estado == 7:
-                #if (ord(caracter) == 39):
-                    #estado = 7
-                
-                #else:
-                    print("caracter empieza")
-                    self.texto += caracter
-                    estado = 12
-                    lexema = ""
-                    #indice -= 1
 
-            #reconocimiento de comentarios lineales
-            elif estado == 8:
-                if caracter != '\n':
+            #termina de reconocer cadenas
+            elif estado == 66:
+                if (ord(caracter) != 34 and ord(caracter) != 39):
                     lexema += caracter
-                    estado = 8
+                    estado = 66
+                
+                else:
+                    print("contenido cadena | caracter " + lexema)
+                    self.texto += lexema
+                    estado = 10
+                    lexema = ""
+                    indice -= 1
+            
+            #reconocimiento de hexadecimal
+            elif estado == 7:
+                if (caracter == '#'):
+                    lexema += caracter
+                    estado = 7
+                
+                elif ((ord(caracter) >= 65 and ord(caracter) <= 90) or (ord(caracter) >= 97 and ord(caracter) <= 122) or (ord(caracter) >= 48 and ord(caracter) <= 57)):
+                    lexema += caracter
+                    estado = 11
 
                 else:
-                    print("comentario lineal: " + lexema)
+                    print("símbolo: " + lexema)
                     self.texto += lexema
                     estado = 0
                     lexema = ""
                     indice -= 1
             
             #reconocimiento de comentarios multilinea
-            elif estado == 9:
-                if caracter != '*':
+            elif estado == 8:
+                if caracter != '*' and caracter != '\n':
                     lexema += caracter
-                    estado = 9
+                    estado = 8
                 
                 elif caracter == '\n':
+                    lexema += caracter
                     columna = 0
                     fila += 1
-                    self.texto += caracter
+                    #self.texto += caracter
                 
                 else:
-                    print("comentario multi " + lexema)
+                    print("comentario: " + lexema)
                     self.texto += lexema
-                    estado = 13
+                    estado = 12
                     lexema = ""
                     indice -= 1
             
             #reconocimiento de la otra parte del decimal
-            elif estado == 10:
+            elif estado == 9:
                 if (ord(caracter) >= 48 and ord(caracter) <= 57):
                     lexema += caracter
-                    estado = 14
+                    estado = 13
 
                 elif caracter == '.':
                     lexema += caracter
-                    estado = 10
+                    estado = 9
 
                 else:
                     estado = -1
 
-            #termina de reconocer cadenas
-            elif estado == 11:
-                if (ord(caracter) != 34):
-                    lexema += caracter
-                    estado = 11
-                
-                else:
-                    print("contenido cadena " + lexema)
-                    self.texto += lexema
-                    estado = 15
-                    lexema = ""
-                    indice -= 1
+            #termina de reconocer cadenas | caracteres
+            elif estado == 10:
+                print("cadena termina")
+                self.texto += caracter
+                estado = 0
+                lexema = ""
             
             #termina de reconocer caracteres
-            elif estado == 12:
-                if (ord(caracter) != 39):
+            elif estado == 11:
+                if ((ord(caracter) >= 65 and ord(caracter) <= 90) or (ord(caracter) >= 97 and ord(caracter) <= 122) or (ord(caracter) >= 48 and ord(caracter) <= 57)):
                     lexema += caracter
-                    estado = 12
+                    estado = 11
+
                 else:
-                    print("contenido caracter " + lexema)
+                    print("símbolo: " + lexema)
                     self.texto += lexema
-                    estado = 16
+                    estado = 0
                     lexema = ""
                     indice -= 1
             
             #reconoce el final de un comentario multilínea
-            elif estado == 13:
+            elif estado == 12:
                 if (caracter == '*'):
+                    lexema += caracter
                     self.texto += caracter
-                    estado = 13
+                    estado = 12
 
                 elif caracter == '/':
-                    estado = 17
+                    lexema += caracter
+                    estado = 14
                     self.texto += caracter
 
                 elif caracter == '\n':
@@ -262,38 +258,24 @@ class LexicoCss:
                     self.texto += caracter
 
                 else:
-                    estado = 9
+                    estado = 8
 
             #reconocimiento de un número decimal
-            elif estado == 14:
+            elif estado == 13:
                 if (ord(caracter) >= 48 and ord(caracter) <= 57):
                     lexema += caracter
-                    estado = 14
+                    estado = 13
                 else:
                     print("decimal " + lexema)
                     self.texto += lexema
                     estado = 0
                     lexema = ""
                     indice -= 1
-            
-            #estado de aceptación
-            elif estado == 15:
-                print("cadena termina")
-                self.texto += caracter
-                estado = 0
-                lexema = ""
 
             #estado de aceptación
-            elif estado == 16:
-                print("termina caracter")
+            elif estado == 14:
+                print("termina comentario: " + lexema)
                 self.texto += caracter
-                estado = 0
-                lexema = ""
-
-            #estado de aceptación
-            elif estado == 17:
-                print("termina comentario multi")
-                self.texto += lexema
                 estado = 0
                 lexema = ""       
 
@@ -312,10 +294,10 @@ class LexicoCss:
     #ENDINIT
 #ENDCLASS
 
-pruebaArchivo = open("dibujo.js", "r")
-lex = Lexico(str(pruebaArchivo.read()))
+pruebaArchivo = open("styles.css", "r")
+lex = LexicoCss(str(pruebaArchivo.read()))
 lex.analisis()
 #escribir el archivo ya corregido
-archivoSalida = open("ArchivoSalidaJS.js", "w")
+archivoSalida = open("ArchivoSalidaCSS.css", "w")
 archivoSalida.write(lex.texto)
 archivoSalida.close()

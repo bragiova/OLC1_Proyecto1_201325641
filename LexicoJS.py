@@ -315,7 +315,7 @@ class Lexico:
     #ENDINIT
 #ENDCLASS
 
-pruebaArchivo = open("dibujo.js", "r")
+pruebaArchivo = open("ejemplo.js", "r")
 lex = Lexico(str(pruebaArchivo.read()))
 lex.analisis()
 #escribir el archivo ya corregido
