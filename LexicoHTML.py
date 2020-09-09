@@ -1,8 +1,12 @@
+import os
+
 class LexicoHtml:
 
     def __init__(self, entrada):
         self.listaCaracteres = list(entrada)
         self.texto = ""
+        self.ruta = "output\\"
+    #ENDINIT
     
     def analisis(self):
         lexema = ""
@@ -10,6 +14,8 @@ class LexicoHtml:
         fila = 0
         columna = 0
         indice = 0
+        esPath = False
+        path = ""
 
         while indice < len(self.listaCaracteres):
             caracter = self.listaCaracteres[indice]
@@ -205,6 +211,12 @@ class LexicoHtml:
             #reconocimiento de comentarios multilinea
             elif estado == 12:
                 if caracter != '-' and caracter != '\n':
+                    if lexema.find("PATHW:") >= 0 and esPath == False:
+                        esPath = True
+                    
+                    if esPath == True:
+                        path += caracter
+
                     lexema += caracter
                     estado = 12
                 
@@ -215,6 +227,12 @@ class LexicoHtml:
                 
                 else:
                     print("comentario: " + lexema)
+                    if esPath == True:
+                        pathsplit = path.split('output')
+                        self.ruta += pathsplit[1]
+                        self.crearCarpeta(self.ruta)
+                        esPath = False
+
                     self.texto += lexema
                     estado = 13
                     lexema = caracter
@@ -257,14 +275,16 @@ class LexicoHtml:
             columna += 1
         #ENDWHILE
     #ENDANALISIS
+
+    def crearCarpeta(self, ruta):
+        os.makedirs(ruta, exist_ok=True)
   
-    #ENDINIT
 #ENDCLASS
 
-pruebaArchivo = open("cajero.html", "r")
-lex = LexicoHtml(str(pruebaArchivo.read()))
-lex.analisis()
+#pruebaArchivo = open("cajero.html", "r")
+#lex = LexicoHtml(str(pruebaArchivo.read()))
+#lex.analisis()
 #escribir el archivo ya corregido
-archivoSalida = open("ArchivoSalidaHTML.html", "w")
-archivoSalida.write(lex.texto)
-archivoSalida.close()
+#archivoSalida = open("ArchivoSalidaHTML.html", "w")
+#archivoSalida.write(lex.texto)
+#archivoSalida.close()
