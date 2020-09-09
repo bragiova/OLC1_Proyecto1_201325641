@@ -3,12 +3,18 @@ from tkinter import ttk
 from tkinter.filedialog import askopenfilename
 from tkinter.scrolledtext import ScrolledText
 from tkinter import messagebox
+import os
+from LexicoJS import Lexico
+from LexicoHTML import LexicoHtml
+from LexicoCSS import LexicoCss
+
 
 class Ejemplo2:
 
     def __init__(self, window):
         self.ventana = window
         self.ventana.title("ML WEB")
+        self.extensionArchivo = ""
 
         frame = LabelFrame(self.ventana, text = '')
         frame.grid(row=0,column=0,columnspan=20,pady=20, sticky=N+S+E+W)
@@ -26,7 +32,7 @@ class Ejemplo2:
         menubarra.add_cascade(label="Archivo", menu=menuarchivo)
 
         menuejecutar = Menu(menubarra, tearoff=0, font=("Comic Sans MS", 9))
-        menuejecutar.add_command(label="Analizar")
+        menuejecutar.add_command(label="Analizar", command=self.analizar)
         menubarra.add_cascade(label="Ejecutar", menu=menuejecutar)
 
         menureportes = Menu(menubarra, tearoff=0, font=("Comic Sans MS", 9))
@@ -37,7 +43,9 @@ class Ejemplo2:
         self.ventana.config(menu=menubarra)
 
         ############################################_ENTRADA_############################################
-        Label(frame,text='Archivo de Entrada:', font=("Comic Sans MS", 9)).grid(row=3,column=5)
+        #self.labelarchivo = Label(frame, text='Archivo de Entrada:', font=("Comic Sans MS", 9)).grid(row=3,column=5)
+        self.labelarchivo = Label(frame, text='Archivo de Entrada:', font=("Comic Sans MS", 9))
+        self.labelarchivo.grid(row=3,column=5)
         self.entrada = Text(frame, height=30, width=80, wrap=NONE, font=("Comic Sans MS", 10))
         self.entrada.grid(row=4,column=5, sticky=N+S+E+W)
 
@@ -50,7 +58,7 @@ class Ejemplo2:
 
         ############################################_SALIDA_############################################3
         Label(frame,text='Consola', font=("Comic Sans MS", 9)).grid(row=3,column=16, sticky=N+S+E+W)
-        self.salida = Text(frame, height=30, width=60, wrap=NONE, font=("Consolas", 9))
+        self.salida = Text(frame, height=30, width=60, wrap=NONE, font=("Consolas", 9), bg="black", fg="white")
         self.salida.grid(row=4,column=16, sticky=N+S+E+W)
 
         scrollverticalConsola = Scrollbar(frame, orient=VERTICAL, command=self.salida.yview)
@@ -81,7 +89,13 @@ class Ejemplo2:
         texto = archivo.read()
         archivo.close()
 
-        self.entrada.insert(INSERT, "")
+        nombreArchivo = os.path.split(filename)
+        extension = nombreArchivo[1].split('.')
+        self.extensionArchivo = extension[1]
+
+        self.labelarchivo.configure(text=nombreArchivo[1])
+
+        self.entrada.delete(1.0, END)
         self.entrada.insert(INSERT,texto)
         return
     #END
@@ -89,18 +103,44 @@ class Ejemplo2:
 
     def analizar(self):
         texto = self.entrada.get("1.0",END)
-        print("analizando: "+texto)
+
+        if self.extensionArchivo == "js":
+            lex = Lexico(texto)
+            lex.analisis()
+            self.crearArchivoCorregido(lex.ruta, lex.texto)
+        
+        elif self.extensionArchivo == "css":
+            lex = LexicoCss(texto)
+            lex.analisis()
+            self.crearArchivoCorregido(lex.ruta, lex.texto)
+
+        elif self.extensionArchivo == "html":
+            lex = LexicoHtml(texto)
+            lex.analisis()
+            #escribir el archivo ya corregido
+            self.crearArchivoCorregido(lex.ruta, lex.texto)
+        
+        else:
+            messagebox.showerror("ML WEB", "Archivo con extensión no permitida para el análisis")
+            return
 
         self.printSalida()
     #END
 
 
     def printSalida(self):
-        texto = "Finalizó el análisis"
-        self.salida.insert(INSERT,texto)
+        #texto = "Finalizó el análisis"
+        #self.salida.insert(INSERT,texto)
 
-        messagebox.showerror("Error", "Texto a mostrar:\n")
+        messagebox.showinfo("ML WEB", "Análisis finalizado")
+        #messagebox.showerror("Error", "Texto a mostrar:\n")
     #END
+
+    def crearArchivoCorregido(self, ruta, texto):
+        #escribir el archivo ya corregido
+        archivoSalida = open(ruta + "\\" + self.labelarchivo['text'], "w")
+        archivoSalida.write(texto)
+        archivoSalida.close()
 
 
     def terminar(self):
