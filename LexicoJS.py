@@ -1,8 +1,12 @@
+import os
+
 class Lexico:
 
     def __init__(self, entrada):
         self.listaCaracteres = list(entrada)
         self.texto = ""
+        self.ruta = "output\\"
+    #ENDINIT
     
     def analisis(self):
         lexema = ""
@@ -10,8 +14,8 @@ class Lexico:
         fila = 0
         columna = 0
         indice = 0
-
-        #prueba = 0
+        esPath = False
+        path = ""
 
         while indice < len(self.listaCaracteres):
             caracter = self.listaCaracteres[indice]
@@ -183,11 +187,23 @@ class Lexico:
             #reconocimiento de comentarios lineales
             elif estado == 8:
                 if caracter != '\n':
+                    if lexema.find("PATHW:") >= 0 and esPath == False:
+                        esPath = True
+                    
+                    if esPath == True:
+                        path += caracter
+
                     lexema += caracter
                     estado = 8
 
                 else:
                     print("comentario lineal: " + lexema)
+                    if esPath == True:
+                        pathsplit = path.split('output')
+                        self.ruta += pathsplit[1]
+                        self.crearCarpeta(self.ruta)
+                        esPath = False
+
                     self.texto += lexema
                     estado = 0
                     lexema = ""
@@ -311,14 +327,17 @@ class Lexico:
             columna += 1
         #ENDWHILE
     #ENDANALISIS
+
+    def crearCarpeta(self, ruta):
+        os.makedirs(ruta, exist_ok=True)
+
   
-    #ENDINIT
 #ENDCLASS
 
-pruebaArchivo = open("ejemplo.js", "r")
-lex = Lexico(str(pruebaArchivo.read()))
-lex.analisis()
+#pruebaArchivo = open("dibujo.js", "r")
+#lex = Lexico(str(pruebaArchivo.read()))
+#lex.analisis()
 #escribir el archivo ya corregido
-archivoSalida = open("ArchivoSalidaJS.js", "w")
-archivoSalida.write(lex.texto)
-archivoSalida.close()
+#archivoSalida = open(lex.ruta + "\\ArchivoSalidaJS.js", "w")
+#archivoSalida.write(lex.texto)
+#archivoSalida.close()
