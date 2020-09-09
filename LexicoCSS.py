@@ -1,8 +1,12 @@
+import os
+
 class LexicoCss:
 
     def __init__(self, entrada):
         self.listaCaracteres = list(entrada)
         self.texto = ""
+        self.ruta = "output\\"
+    #ENDINIT
     
     def analisis(self):
         lexema = ""
@@ -10,6 +14,8 @@ class LexicoCss:
         fila = 0
         columna = 0
         indice = 0
+        esPath = False
+        path = ""
 
         while indice < len(self.listaCaracteres):
             caracter = self.listaCaracteres[indice]
@@ -191,6 +197,12 @@ class LexicoCss:
             #reconocimiento de comentarios multilinea
             elif estado == 8:
                 if caracter != '*' and caracter != '\n':
+                    if lexema.find("PATHW:") >= 0 and esPath == False:
+                        esPath = True
+                    
+                    if esPath == True:
+                        path += caracter
+                    
                     lexema += caracter
                     estado = 8
                 
@@ -202,6 +214,12 @@ class LexicoCss:
                 
                 else:
                     print("comentario: " + lexema)
+                    if esPath == True:
+                        pathsplit = path.split('output')
+                        self.ruta += pathsplit[1]
+                        self.crearCarpeta(self.ruta)
+                        esPath = False
+
                     self.texto += lexema
                     estado = 12
                     lexema = ""
@@ -290,14 +308,16 @@ class LexicoCss:
             columna += 1
         #ENDWHILE
     #ENDANALISIS
+
+    def crearCarpeta(self, ruta):
+        os.makedirs(ruta, exist_ok=True)
   
-    #ENDINIT
 #ENDCLASS
 
-pruebaArchivo = open("styles.css", "r")
-lex = LexicoCss(str(pruebaArchivo.read()))
-lex.analisis()
+#pruebaArchivo = open("styles.css", "r")
+#lex = LexicoCss(str(pruebaArchivo.read()))
+#lex.analisis()
 #escribir el archivo ya corregido
-archivoSalida = open("ArchivoSalidaCSS.css", "w")
-archivoSalida.write(lex.texto)
-archivoSalida.close()
+#archivoSalida = open("ArchivoSalidaCSS.css", "w")
+#archivoSalida.write(lex.texto)
+#archivoSalida.close()
