@@ -6,6 +6,7 @@ class Lexico:
         self.listaCaracteres = list(entrada)
         self.texto = ""
         self.ruta = "output\\"
+        self.listaErrores = list()
     #ENDINIT
     
     def analisis(self):
@@ -319,6 +320,8 @@ class Lexico:
             #reconocimiento de errores
             elif estado == -1:
                 print("Error: " + caracter)
+                error = {'fila': fila, 'columna': columna, 'desc_error': "El caracter "+ caracter + " no pertenece al lenguaje"}
+                self.listaErrores.append(error)
                 estado = 0
                 lexema = ""
             #ENDIF
