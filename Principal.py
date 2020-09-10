@@ -15,6 +15,7 @@ class Ejemplo2:
         self.ventana = window
         self.ventana.title("ML WEB")
         self.extensionArchivo = ""
+        self.listaErroresGeneral = list()
 
         frame = LabelFrame(self.ventana, text = '')
         frame.grid(row=0,column=0,columnspan=20,pady=20, sticky=N+S+E+W)
@@ -37,7 +38,7 @@ class Ejemplo2:
 
         menureportes = Menu(menubarra, tearoff=0, font=("Comic Sans MS", 9))
         menureportes.add_command(label="Árbol JavaScript")
-        menureportes.add_command(label="Errores Léxicos")
+        menureportes.add_command(label="Errores Léxicos", command=self.generarHtmlErrores)
         menubarra.add_cascade(label="Reportes", menu=menureportes)
 
         self.ventana.config(menu=menubarra)
@@ -108,17 +109,23 @@ class Ejemplo2:
             lex = Lexico(texto)
             lex.analisis()
             self.crearArchivoCorregido(lex.ruta, lex.texto)
+            if len(lex.listaErrores) > 0:
+                self.obtenerErrores(lex.listaErrores)
         
         elif self.extensionArchivo == "css":
             lex = LexicoCss(texto)
             lex.analisis()
             self.crearArchivoCorregido(lex.ruta, lex.texto)
+            if len(lex.listaErrores) > 0:
+                self.obtenerErrores(lex.listaErrores)
 
         elif self.extensionArchivo == "html":
             lex = LexicoHtml(texto)
             lex.analisis()
             #escribir el archivo ya corregido
             self.crearArchivoCorregido(lex.ruta, lex.texto)
+            if len(lex.listaErrores) > 0:
+                self.obtenerErrores(lex.listaErrores)
         
         else:
             messagebox.showerror("ML WEB", "Archivo con extensión no permitida para el análisis")
@@ -142,11 +149,68 @@ class Ejemplo2:
         archivoSalida.write(texto)
         archivoSalida.close()
 
-
     def terminar(self):
         self.ventana.destroy()
         return
     #END
+
+    def obtenerErrores(self, listaerrores):
+        self.salida.delete(1.0, END)
+        consola = "Errores\nFila\tColumna\tError\n"
+        for error in listaerrores:
+            errorGeneral = {"fila": str(error['fila']), "columna": str(error['columna']), "desc_error": str(error['desc_error'])}
+            consola += str(error['fila']) + "\t" + str(error['columna']) + "\t" + str(error['desc_error']) + "\n"
+            #print(str(error['fila']) + " - " + str(error['columna']) + " - " + str(error['desc_error']))
+            self.listaErroresGeneral.append(errorGeneral)
+        self.salida.insert(INSERT,consola)
+    #END
+
+    def generarHtmlErrores(self):
+        if len(self.listaErroresGeneral) == 0:
+            messagebox.error("ML WEB", "No se registraron errores en el archivo")
+            return
+
+        if self.extensionArchivo == "js":
+            lenguaje = "JavaScript"
+        elif self.extensionArchivo == "css":
+            lenguaje = "CSS"
+        elif self.extensionArchivo == "html":
+            lenguaje = "HTML"
+
+        contador = 0
+        html = "<!DOCTYPE html>\n"
+        html += "<html>\n"
+        html += "\t<head>\n"
+        html += "\t\t<meta charset = \"utf-8\">\n"
+        html += "\t\t<title>Reporte de Errores</title>\n"
+        html += "\t\t<style>\n"
+        html += "\t\t\ttable, th, td{\n\t\t\t\tborder: 3px solid blue;\n"
+        html += "\t\t\t\tborder-collapse: collapse;\n\t\t\t}\n"
+        html += "\t\t\tth, td, h2{\n\t\t\t\ttext-align: center;\n\t\t\t}\n"
+        html += "\t\t</style>\n"
+        html += "\t</head>\n"
+        html += "\t<body>\n"
+        html += "\t\t<h2>Reporte de Errores L&eacutexicos " + lenguaje + "</h2>\n"
+        html += "\t\t<table align= \"center\">\n"
+        html += "\t\t\t<tr>\n\t\t\t\t" + "<th>No.</th>\n\t\t\t\t" + "<th>Fila</th>\n\t\t\t\t" + "<th>Columna</th>\n\t\t\t\t" + "<th>Error</th>\n\t\t\t"
+        html += "</tr>\n"
+        
+        for error in self.listaErroresGeneral:
+            contador += 1
+            html += "\t\t\t<tr>\n\t\t\t\t" + "<td>" + str(contador) + "</td>\n\t\t\t\t" + "<td>" + error["fila"] + "</td>\n\t\t\t\t" + "<td>" + error["columna"] + "</td>\n\t\t\t\t" + "<td>" + error["desc_error"] + "</td>\n\t\t\t" + "</tr>\n\t\t"
+
+        html += "</table>\n\t" + "</body>\n" + "</html>"
+        self.crearArchivoErrores(lenguaje, html)
+        messagebox.showinfo("ML WEB", "Reporte de errores léxicos del lenguaje " + lenguaje+ " finalizado")
+        self.listaErroresGeneral.clear()
+    #END
+
+    def crearArchivoErrores(self, lenguaje, contenido):
+        archivoErrores = open("Errores_"+lenguaje+".html", "w")
+        archivoErrores.write(contenido)
+        archivoErrores.close()
+    #END
+
 #END
 
 ###################################################################################################
