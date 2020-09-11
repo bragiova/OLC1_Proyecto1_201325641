@@ -7,6 +7,7 @@ class LexicoCss:
         self.texto = ""
         self.ruta = "output\\"
         self.listaErrores = list()
+        self.bitacora = ""
     #ENDINIT
     
     def analisis(self):
@@ -22,6 +23,7 @@ class LexicoCss:
             caracter = self.listaCaracteres[indice]
 
             if estado == 0:
+                self.bitacora += "Estado 0\n"
                 if caracter == '\n':
                     fila += 1
                     estado = 0
@@ -65,6 +67,7 @@ class LexicoCss:
             #ENDIF
 
             if estado == 1:
+                self.bitacora += "Estado 1\n"
                 if caracter == '/':
                     #prueba += 1
                     lexema += caracter
@@ -92,6 +95,7 @@ class LexicoCss:
 
             #reconocimiento de símbolos
             elif estado == 2:
+                self.bitacora += "Estado 2\n"
                 if (caracter == '=' or caracter == ';' or caracter == ',' or caracter == '(' or caracter == ')' or caracter == '{' or caracter == '}' or caracter == ':' or caracter == '%' or caracter == '.' or caracter == '*'):
                     if caracter == ':':
                         lexema += caracter
@@ -99,6 +103,7 @@ class LexicoCss:
 
                     else:
                         print("símbolo: " + caracter)
+                        self.bitacora += "Lexema aceptado -> Símbolo -> " + caracter + "\n"
                         self.texto += caracter
                         estado = 0
                         lexema = ""
@@ -106,6 +111,7 @@ class LexicoCss:
                 
                 else:
                     print("símbolo: " + lexema)
+                    self.bitacora += "Lexema aceptado -> Símbolo -> " + lexema + "\n"
                     self.texto += lexema
                     estado = 0
                     lexema = ""
@@ -113,12 +119,14 @@ class LexicoCss:
             
             #reconocimiento de id's
             elif estado == 3:
+                self.bitacora += "Estado 3\n"
                 if ((ord(caracter) >= 65 and ord(caracter) <= 90) or (ord(caracter) >= 97 and ord(caracter) <= 122) or (ord(caracter) >= 48 and ord(caracter) <= 57) or caracter == '-'):
                     lexema += caracter
                     estado = 3
 
                 else:
                     print("id: " + lexema)
+                    self.bitacora += "Lexema aceptado -> Id -> " + lexema + "\n"
                     self.texto += lexema
                     estado = 0
                     lexema = ""
@@ -126,6 +134,7 @@ class LexicoCss:
             
             #reconocimiento de números
             elif estado == 4:
+                self.bitacora += "Estado 4\n"
                 if (ord(caracter) >= 48 and ord(caracter) <= 57):
                     lexema += caracter
                     estado = 4
@@ -136,6 +145,7 @@ class LexicoCss:
 
                 else:
                     print("numero: " + lexema)
+                    self.bitacora += "Lexema aceptado -> Número -> " + lexema + "\n"
                     self.texto += lexema
                     estado = 0
                     lexema = ""
@@ -143,6 +153,7 @@ class LexicoCss:
             
             #reconocimiento de números negativos
             elif estado == 5:
+                self.bitacora += "Estado 5\n"
                 if (ord(caracter) >= 48 and ord(caracter) <= 57):
                     lexema += caracter
                     estado = 4
@@ -153,6 +164,7 @@ class LexicoCss:
 
                 else:
                     print("símbolo: " + lexema)
+                    self.bitacora += "Lexema aceptado -> Número -> " + lexema + "\n"
                     self.texto += lexema
                     estado = 0
                     lexema = ""
@@ -160,13 +172,16 @@ class LexicoCss:
 
             #reconocimiento de cadenas
             elif estado == 6:
+                self.bitacora += "Estado 6\n"
                 print("cadena | caracter empieza")
                 self.texto += caracter
                 estado = 66
                 lexema = ""
+                self.bitacora += "Lexema aceptado -> Símbolo -> " + caracter + "\n"
 
             #termina de reconocer cadenas
             elif estado == 66:
+                self.bitacora += "Estado 6\n"
                 if (ord(caracter) != 34 and ord(caracter) != 39):
                     lexema += caracter
                     estado = 66
@@ -174,12 +189,14 @@ class LexicoCss:
                 else:
                     print("contenido cadena | caracter " + lexema)
                     self.texto += lexema
+                    self.bitacora += "Lexema aceptado -> . -> " + caracter + "\n"
                     estado = 10
                     lexema = ""
                     indice -= 1
             
             #reconocimiento de hexadecimal
             elif estado == 7:
+                self.bitacora += "Estado 7\n"
                 if (caracter == '#'):
                     lexema += caracter
                     estado = 7
@@ -190,6 +207,7 @@ class LexicoCss:
 
                 else:
                     print("símbolo: " + lexema)
+                    self.bitacora += "Lexema aceptado -> Símbolo -> " + lexema + "\n"
                     self.texto += lexema
                     estado = 0
                     lexema = ""
@@ -197,6 +215,7 @@ class LexicoCss:
             
             #reconocimiento de comentarios multilinea
             elif estado == 8:
+                self.bitacora += "Estado 8\n"
                 if caracter != '*' and caracter != '\n':
                     if lexema.find("PATHW:") >= 0 and esPath == False:
                         esPath = True
@@ -228,6 +247,7 @@ class LexicoCss:
             
             #reconocimiento de la otra parte del decimal
             elif estado == 9:
+                self.bitacora += "Estado 9\n"
                 if (ord(caracter) >= 48 and ord(caracter) <= 57):
                     lexema += caracter
                     estado = 13
@@ -241,19 +261,23 @@ class LexicoCss:
 
             #termina de reconocer cadenas | caracteres
             elif estado == 10:
+                self.bitacora += "Estado 10\n"
                 print("cadena termina")
                 self.texto += caracter
                 estado = 0
                 lexema = ""
+                self.bitacora += "Lexema aceptado -> Símbolo -> " + caracter + "\n"
             
             #termina de reconocer caracteres
             elif estado == 11:
+                self.bitacora += "Estado 11\n"
                 if ((ord(caracter) >= 65 and ord(caracter) <= 90) or (ord(caracter) >= 97 and ord(caracter) <= 122) or (ord(caracter) >= 48 and ord(caracter) <= 57)):
                     lexema += caracter
                     estado = 11
 
                 else:
                     print("símbolo: " + lexema)
+                    self.bitacora += "Lexema aceptado -> NúmeroHexa -> " + lexema + "\n"
                     self.texto += lexema
                     estado = 0
                     lexema = ""
@@ -261,6 +285,7 @@ class LexicoCss:
             
             #reconoce el final de un comentario multilínea
             elif estado == 12:
+                self.bitacora += "Estado 12\n"
                 if (caracter == '*'):
                     lexema += caracter
                     self.texto += caracter
@@ -281,11 +306,13 @@ class LexicoCss:
 
             #reconocimiento de un número decimal
             elif estado == 13:
+                self.bitacora += "Estado 13\n"
                 if (ord(caracter) >= 48 and ord(caracter) <= 57):
                     lexema += caracter
                     estado = 13
                 else:
                     print("decimal " + lexema)
+                    self.bitacora += "Lexema aceptado -> Decimal -> " + lexema + "\n"
                     self.texto += lexema
                     estado = 0
                     lexema = ""
@@ -293,6 +320,7 @@ class LexicoCss:
 
             #estado de aceptación
             elif estado == 14:
+                self.bitacora += "Estado 14\n"
                 print("termina comentario: " + lexema)
                 self.texto += caracter
                 estado = 0
@@ -300,7 +328,9 @@ class LexicoCss:
 
             #reconocimiento de errores
             elif estado == -1:
+                self.bitacora += "Estado Error\n"
                 print("Error: " + caracter)
+                self.bitacora += "Caracter no reconocido -> " + caracter + "\n"
                 error = {'fila': fila, 'columna': columna, 'desc_error': "El caracter "+ caracter + " no pertenece al lenguaje"}
                 self.listaErrores.append(error)
                 estado = 0
