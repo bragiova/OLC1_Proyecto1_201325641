@@ -17,6 +17,8 @@ class LexicoHtml:
         indice = 0
         esPath = False
         path = ""
+        iniciotag = False
+        fintag = False
 
         while indice < len(self.listaCaracteres):
             caracter = self.listaCaracteres[indice]
@@ -58,7 +60,10 @@ class LexicoHtml:
                 
                 #estado error
                 else:
-                    estado = -1
+                    if iniciotag == True and fintag == False:
+                        estado = -1
+                    else:
+                        self.texto += caracter
             #ENDIF
 
             if estado == 1:
@@ -74,6 +79,8 @@ class LexicoHtml:
                     #lexema = ""
 
                 else:
+                    iniciotag = True
+                    fintag = False
                     print("símbolo: " + lexema)
                     self.texto += lexema
                     lexema = ""
@@ -85,6 +92,9 @@ class LexicoHtml:
                 if (caracter == '-' or caracter == '=' or caracter == '!' or caracter == '/' or caracter == '>' or caracter == '<'):
                     print("símbolo: " + caracter)
                     self.texto += caracter
+                    if (caracter == '>'):
+                        iniciotag = False
+                        fintag = True
                     estado = 0
                     lexema = ""
                     #indice -= 1
@@ -176,7 +186,10 @@ class LexicoHtml:
                     estado = 8
 
                 else:
-                    estado = -1
+                    if iniciotag == True and fintag == False:
+                        estado = -1
+                    else:
+                        estado = 0
 
             #termina de reconocer cadenas | caracteres
             elif estado == 9:
@@ -251,6 +264,8 @@ class LexicoHtml:
             #reconocimiento de comentario
             elif estado == 14:
                 if caracter == '>':
+                    fintag = True
+                    iniciotag = False
                     lexema += caracter
                     estado = 15
 
