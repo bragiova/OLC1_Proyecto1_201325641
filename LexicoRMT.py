@@ -23,6 +23,7 @@ class LexicoRmt:
                     estado = 0
                     columna = 0
                     token = {'id': 9, 'token': "salto", 'valor': caracter}
+                    self.listaTokens.append(token)
             
                 elif (caracter == ' ' or caracter == '\r' or caracter == '\t' or caracter == '\b' or caracter == '\f'):
                     estado = 0
@@ -145,12 +146,3 @@ class LexicoRmt:
             print(str(tok["id"]) + " - " + tok["token"] + " - " + str(tok["valor"]))
   
 #ENDCLASS
-
-#pruebaArchivo = open("styles.css", "r")
-lex = LexicoRmt("456*8+6.80-5.99*(5+3)(num1)")
-lex.analisis()
-lex.imprimir()
-#escribir el archivo ya corregido
-#archivoSalida = open("ArchivoSalidaCSS.css", "w")
-#archivoSalida.write(lex.texto)
-#archivoSalida.close()
