@@ -4,18 +4,23 @@ from tkinter.filedialog import askopenfilename
 from tkinter.scrolledtext import ScrolledText
 from tkinter import messagebox
 import os
+import threading
 from LexicoJS import Lexico
 from LexicoHTML import LexicoHtml
 from LexicoCSS import LexicoCss
+from SintacticoRMT import SintacticoRmt
 
 
-class Ejemplo2:
+class Principal:
 
     def __init__(self, window):
         self.ventana = window
         self.ventana.title("ML WEB")
         self.extensionArchivo = ""
         self.listaErroresGeneral = list()
+        self.reportecss = ""
+        self.lexi = None
+        self.sintactico = None
 
         frame = LabelFrame(self.ventana, text = '')
         frame.grid(row=0,column=0,columnspan=20,pady=20, sticky=N+S+E+W)
@@ -37,12 +42,16 @@ class Ejemplo2:
         menubarra.add_cascade(label="Ejecutar", menu=menuejecutar)
 
         menureportes = Menu(menubarra, tearoff=0, font=("Comic Sans MS", 9))
-        menureportes.add_command(label="Árbol JavaScript")
+        menureportes.add_command(label="Reporte JavaScript", command=self.reporteJs)
+        menureportes.add_command(label="Reporte CSS", command=self.bitacoraCss)
         menureportes.add_command(label="Errores Léxicos", command=self.generarHtmlErrores)
+        menureportes.add_command(label="Sintáctico", command=self.reporteSintactico)
         menubarra.add_cascade(label="Reportes", menu=menureportes)
 
         self.ventana.config(menu=menubarra)
 
+        self.labelcursor = Label(frame, text='A', font=("Comic Sans MS", 9))
+        self.labelcursor.grid(row=6,column=5)
         ############################################_ENTRADA_############################################
         #self.labelarchivo = Label(frame, text='Archivo de Entrada:', font=("Comic Sans MS", 9)).grid(row=3,column=5)
         self.labelarchivo = Label(frame, text='Archivo de Entrada:', font=("Comic Sans MS", 9))
@@ -73,6 +82,7 @@ class Ejemplo2:
         self.ventana.grid_rowconfigure(0, weight=1)
 
         frame.grid_columnconfigure(5, weight=1)
+        #frame.grid_columnconfigure(8, weight=1)
         frame.grid_columnconfigure(6, weight=1)
         frame.grid_columnconfigure(16, weight=1)
         frame.grid_columnconfigure(17, weight=1)
@@ -80,13 +90,14 @@ class Ejemplo2:
         frame.grid_rowconfigure(3, weight=1)
         frame.grid_rowconfigure(4, weight=1)
         frame.grid_rowconfigure(5, weight=1)
+        frame.grid_rowconfigure(6, weight=1)
     #END
 
 
     def abrirArchivo(self):
-        filename = askopenfilename()
+        filename = askopenfilename(filetypes=(("Archivos HTML", "*.html"), ("Archivos JS", "*.js"), ("Archivos CSS", "*.css"), ("Archivos RMT", "*.rmt")))
 
-        archivo = open(filename,"r")
+        archivo = open(filename,"r", encoding="utf-8")
         texto = archivo.read()
         archivo.close()
 
@@ -106,41 +117,37 @@ class Ejemplo2:
         texto = self.entrada.get("1.0",END)
 
         if self.extensionArchivo == "js":
-            lex = Lexico(texto)
-            lex.analisis()
-            self.crearArchivoCorregido(lex.ruta, lex.texto)
-            if len(lex.listaErrores) > 0:
-                self.obtenerErrores(lex.listaErrores)
+            self.lexi = Lexico(texto)
+            self.lexi.analisis()
+            self.crearArchivoCorregido(self.lexi.ruta, self.lexi.texto)
+            if len(self.lexi.listaErrores) > 0:
+                self.obtenerErrores(self.lexi.listaErrores)
         
         elif self.extensionArchivo == "css":
-            lex = LexicoCss(texto)
-            lex.analisis()
-            self.crearArchivoCorregido(lex.ruta, lex.texto)
-            if len(lex.listaErrores) > 0:
-                self.obtenerErrores(lex.listaErrores)
-
+            self.lexi = LexicoCss(texto)
+            self.lexi.analisis()
+            self.crearArchivoCorregido(self.lexi.ruta, self.lexi.texto)
+            if len(self.lexi.listaErrores) > 0:
+                self.obtenerErrores(self.lexi.listaErrores)
+        
         elif self.extensionArchivo == "html":
-            lex = LexicoHtml(texto)
-            lex.analisis()
+            self.lexi = LexicoHtml(texto)
+            self.lexi.analisis()
             #escribir el archivo ya corregido
-            self.crearArchivoCorregido(lex.ruta, lex.texto)
-            if len(lex.listaErrores) > 0:
-                self.obtenerErrores(lex.listaErrores)
+            self.crearArchivoCorregido(self.lexi.ruta, self.lexi.texto)
+            if len(self.lexi.listaErrores) > 0:
+                self.obtenerErrores(self.lexi.listaErrores)
+        
+        elif self.extensionArchivo == "rmt":
+            self.sintactico = SintacticoRmt()
+            self.sintactico.analizadorLexico(texto)
+            self.sintactico.analizadorSintactico()
         
         else:
             messagebox.showerror("ML WEB", "Archivo con extensión no permitida para el análisis")
             return
 
-        self.printSalida()
-    #END
-
-
-    def printSalida(self):
-        #texto = "Finalizó el análisis"
-        #self.salida.insert(INSERT,texto)
-
         messagebox.showinfo("ML WEB", "Análisis finalizado")
-        #messagebox.showerror("Error", "Texto a mostrar:\n")
     #END
 
     def crearArchivoCorregido(self, ruta, texto):
@@ -156,7 +163,7 @@ class Ejemplo2:
 
     def obtenerErrores(self, listaerrores):
         self.salida.delete(1.0, END)
-        consola = "Errores\nFila\tColumna\tError\n"
+        consola = "\t\t\tERRORES LÉXICOS\nFila\tColumna\tError\n"
         for error in listaerrores:
             errorGeneral = {"fila": str(error['fila']), "columna": str(error['columna']), "desc_error": str(error['desc_error'])}
             consola += str(error['fila']) + "\t" + str(error['columna']) + "\t" + str(error['desc_error']) + "\n"
@@ -201,8 +208,9 @@ class Ejemplo2:
 
         html += "</table>\n\t" + "</body>\n" + "</html>"
         self.crearArchivoErrores(lenguaje, html)
-        messagebox.showinfo("ML WEB", "Reporte de errores léxicos del lenguaje " + lenguaje+ " finalizado")
+        #messagebox.showinfo("ML WEB", "Reporte de errores léxicos del lenguaje " + lenguaje+ " finalizado")
         self.listaErroresGeneral.clear()
+        os.system("Errores_"+lenguaje+".html")
     #END
 
     def crearArchivoErrores(self, lenguaje, contenido):
@@ -211,10 +219,62 @@ class Ejemplo2:
         archivoErrores.close()
     #END
 
+    def bitacoraCss(self):
+        self.salida.delete(1.0, END)
+        self.salida.insert(INSERT,self.lexi.bitacora)
+    #END
+
+    def reporteJs(self):
+        self.lexi.generarArbol()
+        os.system("ReporteJS.gv.pdf")
+    #END
+
+    def reporteSintactico(self):
+        contador = 0
+        html = "<!DOCTYPE html>\n"
+        html += "<html>\n"
+        html += "\t<head>\n"
+        html += "\t\t<meta charset = \"utf-8\">\n"
+        html += "\t\t<title>Reporte An&aacutelisis Sint&aacutectico</title>\n"
+        html += "\t\t<style>\n"
+        html += "\t\t\ttable, th, td{\n\t\t\t\tborder: 3px solid blue;\n"
+        html += "\t\t\t\tborder-collapse: collapse;\n\t\t\t}\n"
+        html += "\t\t\tth, td, h2{\n\t\t\t\ttext-align: center;\n\t\t\t}\n"
+        html += "\t\t</style>\n"
+        html += "\t</head>\n"
+        html += "\t<body>\n"
+        html += "\t\t<h2>Reporte An&aacutelisis Sint&aacutectico</h2>\n"
+        html += "\t\t<table align= \"center\">\n"
+        html += "\t\t\t<tr>\n\t\t\t\t" + "<th>No.</th>\n\t\t\t\t" + "<th>Operaci&oacuten</th>\n\t\t\t\t" + "<th>Estado</th>\n\t\t\t\t"
+        html += "</tr>\n"
+        
+        for ope in self.sintactico.lista_operaciones:
+            contador += 1
+            html += "\t\t\t<tr>\n\t\t\t\t" + "<td>" + str(contador) + "</td>\n\t\t\t\t" + "<td>" + ope["operacion"] + "</td>\n\t\t\t\t" + "<td>" + ope["estado"] + "</td>\n\t\t\t\t" + "</tr>\n\t\t"
+
+        html += "</table>\n\t" + "</body>\n" + "</html>"
+
+        self.crearArchivoSintactico(html)
+        os.system("Sintactico.html")
+    #END
+
+    def crearArchivoSintactico(self, contenido):
+        archivoSintactico = open("Sintactico.html", "w")
+        archivoSintactico.write(contenido)
+        archivoSintactico.close()
+    #END
+
+    #def obtenerDiccionario(self):
+        #if self.extensionArchivo == "js":
+            #diccionariojs = {
+                #palabra: ['var', 'if', 'else', 'for', 'while', 'do', 'continue', 'break', 'return', 'function', 'constructor', 'class', 'this'],
+                #simbolo: ['+', '-', '/', '*', '<', '>', '=', ';', ',', '.', '&', '|', '!', '(', ')', '{', '}', '"', '\'', ]
+            #}
+
 #END
 
 ###################################################################################################
 if __name__ == '__main__':
     window = Tk()
-    app = Ejemplo2(window)
+    app = Principal(window)
     window.mainloop()
