@@ -67,6 +67,7 @@ class Principal:
         scrollhorizontal = Scrollbar(frame, orient=HORIZONTAL, command=self.entrada.xview)
         scrollhorizontal.grid(row=5, column=5, sticky=E+W+N)
         self.entrada.configure(yscrollcommand=scrollvertical.set, xscrollcommand=scrollhorizontal.set)
+        #self.entrada.bind('<KeyRelease>', lambda e: self.mostrarlineacolumna(self.entrada.index("current")))
 
         ############################################_SALIDA_############################################3
         Label(frame,text='Consola', font=("Comic Sans MS", 9)).grid(row=3,column=16, sticky=N+S+E+W)
@@ -123,14 +124,26 @@ class Principal:
             self.entrada.insert(INSERT,texto)
 
             #pintado de palabras
-            #self.pintarComentarioLineal()
-            self.pintarComentarioMulti()
-            #self.pintarOperadores()
-            #self.pintarIntBoolean()
-            #self.pintarCadenas()
-            #self.pintarReservadas()
+            self.pintarPalabras()
         return
     #END
+
+    def pintarPalabras(self):
+        self.pintarIntBoolean()
+        self.pintarCadenas()
+        self.pintarReservadas()
+
+        if self.extensionArchivo == "html":
+            self.pintarComentarioMulti()
+        elif self.extensionArchivo == "css":
+            self.pintarComentarioMulti()
+            #self.pintarOperadores()
+        else:
+            self.pintarComentarioLineal()
+            self.pintarComentarioMulti()
+            self.pintarOperadores()
+    #END
+
 
     def guardarArchivo(self):
         try:
@@ -332,8 +345,18 @@ class Principal:
     #END
 
     def pintarReservadas(self):
-        
-        palabra = ['var', 'if', 'else', 'for', 'while', 'do', 'continue', 'break', 'return', 'function', 'constructor', 'class', 'this']
+        palabra = None
+        reservadasjs = ['var', 'if', 'else', 'for', 'while', 'do', 'continue', 'break', 'return', 'function', 'constructor', 'class', 'this']
+        reservadascss = ['color', 'border', 'text-align', 'font-weight', 'padding-left', 'padding-top', 'line-height', 'margin-top', 'margin-left', 'display', 'top', 'float', 'min-width', 'background-color', 'opacity', 'font-family', 'font-size', 'padding-right', 'padding', 'width', 'margin-right', 'margin', 'position', 'right', 'clear', 'max-height', 'backgroun-image', 'background', 'font-style', 'font', 'padding-bottom', 'height', 'margin-bottom', 'border-style', 'bottom', 'left', 'max-width', 'min-height']
+        reservadashtml = ['html', 'head', 'title', 'body', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'img', 'a', 'href', 'ul', 'li', 'style', 'table', 'tr', 'td', 'th', 'caption', 'colgroup', 'col', 'thead', 'tbody', 'tfoot', 'src']
+
+        if self.extensionArchivo == "js":
+            palabra = reservadasjs
+        elif self.extensionArchivo == "css":
+            palabra = reservadascss
+        else:
+            palabra = reservadashtml
+
         self.entrada.tag_config('res', foreground='red')
         count1 = IntVar()
 
@@ -389,7 +412,11 @@ class Principal:
     #END
 
     def pintarComentarioMulti(self):
-        expcomentmulti = "((/\*)[^*]*(\*/))|((/\*)(.*)(\*+/))"
+        if self.extensionArchivo == "css" or self.extensionArchivo == "js":
+            expcomentmulti = "((/\*)((.|\s)*)(\*+/))"
+        else:
+            expcomentmulti = "(<!--)((.|\s)*)(-->)"
+
         self.entrada.tag_config('comentmulti', foreground='gray')
         count1 = IntVar()
 
@@ -414,8 +441,7 @@ class Principal:
             lastidx = '%s+%dc' % (idx, count1.get())
             self.entrada.tag_add('int', idx, lastidx)
             idx = lastidx
-    
-
+    #END
 #END
 
 ###################################################################################################
