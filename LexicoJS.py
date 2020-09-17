@@ -177,10 +177,6 @@ class Lexico:
 
             #reconocimiento de cadenas
             elif estado == 6:
-                #if (ord(caracter) == 34):
-                    #estado == 6
-                
-                #else:
                 print("cadena empieza")
                 self.texto += caracter
                 estado = 11
@@ -189,15 +185,11 @@ class Lexico:
             
             #reconocimiento de caracteres
             elif estado == 7:
-                #if (ord(caracter) == 39):
-                    #estado = 7
-                
-                #else:
-                    print("caracter empieza")
-                    self.texto += caracter
-                    estado = 12
-                    lexema = ""
-                    #indice -= 1
+                print("caracter empieza")
+                self.texto += caracter
+                estado = 12
+                lexema = ""
+                #indice -= 1
 
             #reconocimiento de comentarios lineales
             elif estado == 8:
@@ -230,11 +222,10 @@ class Lexico:
                 if caracter != '*':
                     lexema += caracter
                     estado = 9
-                
-                elif caracter == '\n':
-                    columna = 0
-                    fila += 1
-                    self.texto += caracter
+                    if caracter == '\n':
+                        columna = 0
+                        fila += 1
+                        #self.texto += caracter
                 
                 else:
                     print("comentario multi " + lexema)
@@ -381,7 +372,6 @@ class Lexico:
             self.autoDecimal(dot)
 
         dot.render('ReporteJS.gv', view=False)
-        #print("Grafo de Estados Generado")
     #ENDGENERARARBOL
 
     def autoId(self, dot):
@@ -488,11 +478,3 @@ class Lexico:
     #END
   
 #ENDCLASS
-
-#pruebaArchivo = open("dibujo.js", "r")
-#lex = Lexico(str(pruebaArchivo.read()))
-#lex.analisis()
-#escribir el archivo ya corregido
-#archivoSalida = open(lex.ruta + "\\ArchivoSalidaJS.js", "w")
-#archivoSalida.write(lex.texto)
-#archivoSalida.close()

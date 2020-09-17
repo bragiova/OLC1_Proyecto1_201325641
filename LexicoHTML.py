@@ -73,7 +73,6 @@ class LexicoHtml:
                 
                 elif caracter == '!':
                     lexema += caracter
-                    #print("comentario empieza: " + lexema)
                     estado = 7
                     #self.texto += lexema
                     #lexema = ""
@@ -298,11 +297,3 @@ class LexicoHtml:
         os.makedirs(ruta, exist_ok=True)
   
 #ENDCLASS
-
-#pruebaArchivo = open("cajero.html", "r")
-#lex = LexicoHtml(str(pruebaArchivo.read()))
-#lex.analisis()
-#escribir el archivo ya corregido
-#archivoSalida = open("ArchivoSalidaHTML.html", "w")
-#archivoSalida.write(lex.texto)
-#archivoSalida.close()

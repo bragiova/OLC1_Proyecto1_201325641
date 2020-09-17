@@ -13,7 +13,7 @@ class LexicoCss:
     def analisis(self):
         lexema = ""
         estado = 0
-        fila = 0
+        fila = 1
         columna = 0
         indice = 0
         esPath = False
@@ -81,14 +81,6 @@ class LexicoCss:
                     lexema = ""
 
                 else:
-                    #if lexema == "//":
-                        #print("comentario lineal empieza")
-                        #estado = 8
-                    #else:
-                        #print("símbolo: " + lexema)
-                        #estado = 0
-
-                    #self.texto += lexema
                     lexema = ""
                     estado = -1
                     #indice -= 1
@@ -346,11 +338,3 @@ class LexicoCss:
         os.makedirs(ruta, exist_ok=True)
   
 #ENDCLASS
-
-#pruebaArchivo = open("styles.css", "r")
-#lex = LexicoCss(str(pruebaArchivo.read()))
-#lex.analisis()
-#escribir el archivo ya corregido
-#archivoSalida = open("ArchivoSalidaCSS.css", "w")
-#archivoSalida.write(lex.texto)
-#archivoSalida.close()

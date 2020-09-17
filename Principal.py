@@ -1,10 +1,11 @@
 from tkinter import *
 from tkinter import ttk
-from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import askopenfilename, asksaveasfilename
 from tkinter.scrolledtext import ScrolledText
 from tkinter import messagebox
 import os
 import threading
+import re
 from LexicoJS import Lexico
 from LexicoHTML import LexicoHtml
 from LexicoCSS import LexicoCss
@@ -21,18 +22,19 @@ class Principal:
         self.reportecss = ""
         self.lexi = None
         self.sintactico = None
+        self.pathArchivo = ""
+        self.esNuevo = False
 
         frame = LabelFrame(self.ventana, text = '')
         frame.grid(row=0,column=0,columnspan=20,pady=20, sticky=N+S+E+W)
 
         #############################################_MENU_#############################################
-
         menubarra = Menu(self.ventana)
         menuarchivo = Menu(menubarra, tearoff = 0, font=("Comic Sans MS", 9))
-        menuarchivo.add_command(label="Nuevo")
+        menuarchivo.add_command(label="Nuevo", command=self.archivoNuevo)
         menuarchivo.add_command(label="Abrir", command=self.abrirArchivo)
-        menuarchivo.add_command(label="Guardar")
-        menuarchivo.add_command(label="Guardar como")
+        menuarchivo.add_command(label="Guardar", command=self.guardarArchivo)
+        menuarchivo.add_command(label="Guardar como", command=self.guardarComo)
         menuarchivo.add_separator()
         menuarchivo.add_command(label="Salir", command=self.terminar)
         menubarra.add_cascade(label="Archivo", menu=menuarchivo)
@@ -50,10 +52,10 @@ class Principal:
 
         self.ventana.config(menu=menubarra)
 
-        self.labelcursor = Label(frame, text='A', font=("Comic Sans MS", 9))
-        self.labelcursor.grid(row=6,column=5)
+        #self.labelcursor = Label(frame, text='A', font=("Comic Sans MS", 9))
+        #self.labelcursor.grid(row=6,column=5)
+
         ############################################_ENTRADA_############################################
-        #self.labelarchivo = Label(frame, text='Archivo de Entrada:', font=("Comic Sans MS", 9)).grid(row=3,column=5)
         self.labelarchivo = Label(frame, text='Archivo de Entrada:', font=("Comic Sans MS", 9))
         self.labelarchivo.grid(row=3,column=5)
         self.entrada = Text(frame, height=30, width=80, wrap=NONE, font=("Comic Sans MS", 10))
@@ -82,7 +84,6 @@ class Principal:
         self.ventana.grid_rowconfigure(0, weight=1)
 
         frame.grid_columnconfigure(5, weight=1)
-        #frame.grid_columnconfigure(8, weight=1)
         frame.grid_columnconfigure(6, weight=1)
         frame.grid_columnconfigure(16, weight=1)
         frame.grid_columnconfigure(17, weight=1)
@@ -90,30 +91,79 @@ class Principal:
         frame.grid_rowconfigure(3, weight=1)
         frame.grid_rowconfigure(4, weight=1)
         frame.grid_rowconfigure(5, weight=1)
-        frame.grid_rowconfigure(6, weight=1)
+        #frame.grid_rowconfigure(6, weight=1)
     #END
 
+    def archivoNuevo(self):
+        texto = self.entrada.get(1.0, END)
+        if texto != "":
+            self.entrada.delete(1.0, END)
+        
+        self.labelarchivo.configure(text="Archivo nuevo")
+        self.esNuevo = True
 
     def abrirArchivo(self):
         filename = askopenfilename(filetypes=(("Archivos HTML", "*.html"), ("Archivos JS", "*.js"), ("Archivos CSS", "*.css"), ("Archivos RMT", "*.rmt")))
+        self.pathArchivo = filename
 
-        archivo = open(filename,"r", encoding="utf-8")
-        texto = archivo.read()
-        archivo.close()
+        if filename:
+            self.extensionArchivo = ""
+            self.esNuevo = False
+            archivo = open(filename,"r", encoding="utf-8")
+            texto = archivo.read()
+            archivo.close()
 
-        nombreArchivo = os.path.split(filename)
-        extension = nombreArchivo[1].split('.')
-        self.extensionArchivo = extension[1]
+            nombreArchivo = os.path.split(filename)
+            extension = nombreArchivo[1].split('.')
+            self.extensionArchivo = extension[1]
 
-        self.labelarchivo.configure(text=nombreArchivo[1])
+            self.labelarchivo.configure(text=nombreArchivo[1])
 
-        self.entrada.delete(1.0, END)
-        self.entrada.insert(INSERT,texto)
+            self.entrada.delete(1.0, END)
+            self.entrada.insert(INSERT,texto)
+            #self.obtenerDiccionario()
         return
     #END
 
+    def guardarArchivo(self):
+        try:
+            if self.esNuevo:
+                self.guardarComo()
+                self.esNuevo = False
+                return
+
+            texto = self.entrada.get(1.0, END)
+            archivo_guardar = open(self.pathArchivo, "w", encoding="utf-8")
+            archivo_guardar.write(str(texto))
+            archivo_guardar.close()
+            messagebox.showinfo("ML WEB", "Cambios guardados")
+        except:
+            messagebox.showwarning("ML WEB", "Error al tratar de guardar archivo")
+
+    def guardarComo(self):
+        try:
+            filename = asksaveasfilename(filetypes=(("Archivos HTML", "*.html"), ("Archivos JS", "*.js"), ("Archivos CSS", "*.css"), ("Archivos RMT", "*.rmt")))
+            texto = self.entrada.get(1.0, END)
+
+            if filename:
+                archivo_guardar = open(filename, "w", encoding="utf-8")
+                archivo_guardar.write(str(texto))
+                archivo_guardar.close()
+
+                nombreArchivo = os.path.split(filename)
+                extension = nombreArchivo[1].split('.')
+                self.extensionArchivo = extension[1]
+                self.labelarchivo.configure(text=nombreArchivo[1])
+            return
+        except:
+            messagebox.showwarning("ML WEB", "Error al tratar de guardar archivo")
+
 
     def analizar(self):
+        if self.esNuevo:
+            messagebox.showerror("ML WEB", "Primero debe guardar el archivo con alguna de las extensiones permitidas")
+            return
+
         texto = self.entrada.get("1.0",END)
 
         if self.extensionArchivo == "js":
@@ -151,10 +201,13 @@ class Principal:
     #END
 
     def crearArchivoCorregido(self, ruta, texto):
-        #escribir el archivo ya corregido
-        archivoSalida = open(ruta + "\\" + self.labelarchivo['text'], "w")
-        archivoSalida.write(texto)
-        archivoSalida.close()
+        try:
+            #escribir el archivo ya corregido
+            archivoSalida = open(ruta + "\\" + self.labelarchivo['text'], "w")
+            archivoSalida.write(texto)
+            archivoSalida.close()
+        except:
+            messagebox.showwarning("ML WEB", "Error al tratar de crear archivo corregido")
 
     def terminar(self):
         self.ventana.destroy()
@@ -167,14 +220,13 @@ class Principal:
         for error in listaerrores:
             errorGeneral = {"fila": str(error['fila']), "columna": str(error['columna']), "desc_error": str(error['desc_error'])}
             consola += str(error['fila']) + "\t" + str(error['columna']) + "\t" + str(error['desc_error']) + "\n"
-            #print(str(error['fila']) + " - " + str(error['columna']) + " - " + str(error['desc_error']))
             self.listaErroresGeneral.append(errorGeneral)
         self.salida.insert(INSERT,consola)
     #END
 
     def generarHtmlErrores(self):
         if len(self.listaErroresGeneral) == 0:
-            messagebox.error("ML WEB", "No se registraron errores en el archivo")
+            messagebox.showerror("ML WEB", "No se registraron errores en el archivo")
             return
 
         if self.extensionArchivo == "js":
@@ -208,9 +260,11 @@ class Principal:
 
         html += "</table>\n\t" + "</body>\n" + "</html>"
         self.crearArchivoErrores(lenguaje, html)
-        #messagebox.showinfo("ML WEB", "Reporte de errores léxicos del lenguaje " + lenguaje+ " finalizado")
         self.listaErroresGeneral.clear()
-        os.system("Errores_"+lenguaje+".html")
+        try:
+            os.system("Errores_"+lenguaje+".html")
+        except:
+            print("Error al tratar de abrir el archivo de errores")
     #END
 
     def crearArchivoErrores(self, lenguaje, contenido):
@@ -225,8 +279,11 @@ class Principal:
     #END
 
     def reporteJs(self):
-        self.lexi.generarArbol()
-        os.system("ReporteJS.gv.pdf")
+        try:
+            self.lexi.generarArbol()
+            os.system("ReporteJS.gv.pdf")
+        except:
+            print("Error al tratar de abrir el reporte JS")
     #END
 
     def reporteSintactico(self):
@@ -255,7 +312,10 @@ class Principal:
         html += "</table>\n\t" + "</body>\n" + "</html>"
 
         self.crearArchivoSintactico(html)
-        os.system("Sintactico.html")
+        try:
+            os.system("Sintactico.html")
+        except:
+            print("Error al tratar de abrir el reporte Sintáctico")
     #END
 
     def crearArchivoSintactico(self, contenido):
@@ -264,12 +324,23 @@ class Principal:
         archivoSintactico.close()
     #END
 
-    #def obtenerDiccionario(self):
+    def obtenerDiccionario(self):
         #if self.extensionArchivo == "js":
             #diccionariojs = {
                 #palabra: ['var', 'if', 'else', 'for', 'while', 'do', 'continue', 'break', 'return', 'function', 'constructor', 'class', 'this'],
                 #simbolo: ['+', '-', '/', '*', '<', '>', '=', ';', ',', '.', '&', '|', '!', '(', ')', '{', '}', '"', '\'', ]
             #}
+        palabra = ['var', 'if', 'else', 'for', 'while', 'do', 'continue', 'break', 'return', 'function', 'constructor', 'class', 'this']
+        self.entrada.tag_config('res', foreground='red')
+        #w = re.search("[Aa-Za]+([Aa-Zz]+|[0-9]+|_)*", word)
+        for word in palabra:
+            idx = 1.0
+            while True:
+                idx = self.entrada.search(word, idx, nocase=1, stopindex=END)
+                if not idx: break
+                lastidx = '%s+%dc' % (idx, len(word))
+                self.entrada.tag_add('res', idx, lastidx)
+                idx = lastidx
 
 #END
 

@@ -140,9 +140,4 @@ class LexicoRmt:
             columna += 1
         #ENDWHILE
     #ENDANALISIS
-
-    def imprimir(self):
-        for tok in self.listaTokens:
-            print(str(tok["id"]) + " - " + tok["token"] + " - " + str(tok["valor"]))
-  
 #ENDCLASS
