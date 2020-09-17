@@ -121,7 +121,14 @@ class Principal:
 
             self.entrada.delete(1.0, END)
             self.entrada.insert(INSERT,texto)
-            #self.obtenerDiccionario()
+
+            #pintado de palabras
+            #self.pintarComentarioLineal()
+            self.pintarComentarioMulti()
+            #self.pintarOperadores()
+            #self.pintarIntBoolean()
+            #self.pintarCadenas()
+            #self.pintarReservadas()
         return
     #END
 
@@ -324,23 +331,90 @@ class Principal:
         archivoSintactico.close()
     #END
 
-    def obtenerDiccionario(self):
-        #if self.extensionArchivo == "js":
-            #diccionariojs = {
-                #palabra: ['var', 'if', 'else', 'for', 'while', 'do', 'continue', 'break', 'return', 'function', 'constructor', 'class', 'this'],
-                #simbolo: ['+', '-', '/', '*', '<', '>', '=', ';', ',', '.', '&', '|', '!', '(', ')', '{', '}', '"', '\'', ]
-            #}
+    def pintarReservadas(self):
+        
         palabra = ['var', 'if', 'else', 'for', 'while', 'do', 'continue', 'break', 'return', 'function', 'constructor', 'class', 'this']
         self.entrada.tag_config('res', foreground='red')
-        #w = re.search("[Aa-Za]+([Aa-Zz]+|[0-9]+|_)*", word)
+        count1 = IntVar()
+
         for word in palabra:
             idx = 1.0
             while True:
-                idx = self.entrada.search(word, idx, nocase=1, stopindex=END)
+                idx = self.entrada.search(word, idx, nocase=1, count=count1, stopindex=END, regexp=True)
                 if not idx: break
                 lastidx = '%s+%dc' % (idx, len(word))
                 self.entrada.tag_add('res', idx, lastidx)
                 idx = lastidx
+    #END
+
+    def pintarCadenas(self):
+        expcadenacarac = "(\"|')(.*)(\"|')"
+        self.entrada.tag_config('cadenas', foreground='yellow2')
+        count1 = IntVar()
+
+        idx = 1.0
+        while True:
+            idx = self.entrada.search(expcadenacarac, idx, nocase=1, count=count1, stopindex=END, regexp=True)
+            if not idx: break
+            lastidx = '%s+%dc' % (idx, count1.get())
+            self.entrada.tag_add('cadenas', idx, lastidx)
+            idx = lastidx
+    #END
+
+    def pintarOperadores(self):
+        expoperadores = "[+]|-|/|[*]|==|!=|<|>|>=|<=|[||]|&&|!"
+        self.entrada.tag_config('ope', foreground='orange')
+        count1 = IntVar()
+
+        idx = 1.0
+        while True:
+            idx = self.entrada.search(expoperadores, idx, nocase=1, count=count1, stopindex=END, regexp=True)
+            if not idx: break
+            lastidx = '%s+%dc' % (idx, count1.get())
+            self.entrada.tag_add('ope', idx, lastidx)
+            idx = lastidx
+        
+    def pintarComentarioLineal(self):
+        expcomentlinea = "//.*"
+        self.entrada.tag_config('comentlineal', foreground='gray')
+        count1 = IntVar()
+
+        idx = 1.0
+        while True:
+            idx = self.entrada.search(expcomentlinea, idx, nocase=1, count=count1, stopindex=END, regexp=True)
+            if not idx: break
+            lastidx = '%s+%dc' % (idx, count1.get())
+            self.entrada.tag_add('comentlineal', idx, lastidx)
+            idx = lastidx
+    #END
+
+    def pintarComentarioMulti(self):
+        expcomentmulti = "((/\*)[^*]*(\*/))|((/\*)(.*)(\*+/))"
+        self.entrada.tag_config('comentmulti', foreground='gray')
+        count1 = IntVar()
+
+        idx = 1.0
+        while True:
+            idx = self.entrada.search(expcomentmulti, idx, nocase=1, count=count1, stopindex=END, regexp=True)
+            if not idx: break
+            lastidx = '%s+%dc' % (idx, count1.get())
+            self.entrada.tag_add('comentmulti', idx, lastidx)
+            idx = lastidx
+    #END
+
+    def pintarIntBoolean(self):
+        expintboolean = "\d|true|false"
+        self.entrada.tag_config('int', foreground='blue')
+        count1 = IntVar()
+
+        idx = 1.0
+        while True:
+            idx = self.entrada.search(expintboolean, idx, nocase=1, count=count1, stopindex=END, regexp=True)
+            if not idx: break
+            lastidx = '%s+%dc' % (idx, count1.get())
+            self.entrada.tag_add('int', idx, lastidx)
+            idx = lastidx
+    
 
 #END
 
